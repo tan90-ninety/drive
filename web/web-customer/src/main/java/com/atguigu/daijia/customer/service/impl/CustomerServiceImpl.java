@@ -6,6 +6,7 @@ import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.common.result.ResultCodeEnum;
 import com.atguigu.daijia.customer.client.CustomerInfoFeignClient;
 import com.atguigu.daijia.customer.service.CustomerService;
+import com.atguigu.daijia.model.form.customer.UpdateWxPhoneForm;
 import com.atguigu.daijia.model.vo.customer.CustomerLoginVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,12 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GuiguException(ResultCodeEnum.FEIGN_FAIL);
         }
         return customerLoginVo;
+    }
+
+    @Override
+    public Boolean updateWxPhoneNumber(UpdateWxPhoneForm updateWxPhoneForm) {
+        client.updateWxPhoneNumber(updateWxPhoneForm);
+        return true;
     }
 
 }

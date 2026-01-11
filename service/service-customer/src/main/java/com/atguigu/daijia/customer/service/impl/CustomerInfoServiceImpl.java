@@ -2,14 +2,18 @@ package com.atguigu.daijia.customer.service.impl;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
+import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
+import com.atguigu.daijia.common.execption.GuiguException;
+import com.atguigu.daijia.common.result.ResultCodeEnum;
 import com.atguigu.daijia.customer.mapper.CustomerInfoMapper;
 import com.atguigu.daijia.customer.mapper.CustomerLoginLogMapper;
 import com.atguigu.daijia.customer.service.CustomerInfoService;
 import com.atguigu.daijia.model.entity.customer.CustomerInfo;
 import com.atguigu.daijia.model.entity.customer.CustomerLoginLog;
+import com.atguigu.daijia.model.form.customer.UpdateWxPhoneForm;
 import com.atguigu.daijia.model.vo.customer.CustomerLoginVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -71,5 +75,29 @@ public class CustomerInfoServiceImpl extends ServiceImpl<CustomerInfoMapper, Cus
         customerLoginVo.setIsBindPhone(StringUtils.hasText(customerInfo.getPhone()));
 
         return customerLoginVo;
+    }
+
+    @Override
+    public Boolean updateWxPhoneNumber(UpdateWxPhoneForm updateWxPhoneForm) {
+        WxMaPhoneNumberInfo phoneNoInfo = null;
+        if (updateWxPhoneForm.getCode() != null) {
+            try {
+                phoneNoInfo = wxMaService.getUserService().getPhoneNoInfo(updateWxPhoneForm.getCode());
+            } catch (WxErrorException e) {
+                throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+            }
+        } else {
+//            微信小程序个人无法获取手机号时的备用学习测试方案
+            phoneNoInfo = new WxMaPhoneNumberInfo();
+            phoneNoInfo.setPhoneNumber("13632014750");
+        }
+
+        String phoneNumber = phoneNoInfo.getPhoneNumber();
+        UpdateWrapper<CustomerInfo> customerInfoUpdateWrapper = new UpdateWrapper<>();
+        customerInfoUpdateWrapper.eq("id", updateWxPhoneForm.getCustomerId());
+        customerInfoUpdateWrapper.set("phone", phoneNumber);
+        customerInfoMapper.update(null, customerInfoUpdateWrapper);
+
+        return true;
     }
 }
