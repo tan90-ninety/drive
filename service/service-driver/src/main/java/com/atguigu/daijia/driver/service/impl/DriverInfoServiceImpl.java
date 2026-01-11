@@ -14,13 +14,16 @@ import com.atguigu.daijia.model.entity.driver.DriverAccount;
 import com.atguigu.daijia.model.entity.driver.DriverInfo;
 import com.atguigu.daijia.model.entity.driver.DriverLoginLog;
 import com.atguigu.daijia.model.entity.driver.DriverSet;
+import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 
@@ -83,5 +86,16 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
         } catch (WxErrorException e) {
             throw new GuiguException(ResultCodeEnum.DATA_ERROR);
         }
+    }
+
+    @Override
+    public DriverLoginVo getDriverInfo(Long driverId) {
+        DriverInfo driverInfo = driverInfoMapper.selectById(driverId);
+        DriverLoginVo driverLoginVo = new DriverLoginVo();
+        BeanUtils.copyProperties(driverInfo, driverLoginVo);
+        String faceModelId = driverInfo.getFaceModelId();
+        boolean hasText = StringUtils.hasText(faceModelId);
+        driverLoginVo.setIsArchiveFace(hasText);
+        return driverLoginVo;
     }
 }

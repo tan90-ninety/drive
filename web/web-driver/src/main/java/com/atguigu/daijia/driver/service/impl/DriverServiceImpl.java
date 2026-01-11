@@ -4,6 +4,7 @@ import com.atguigu.daijia.common.constant.RedisConstant;
 import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.driver.client.DriverInfoFeignClient;
 import com.atguigu.daijia.driver.service.DriverService;
+import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,8 +31,15 @@ public class DriverServiceImpl implements DriverService {
 
         String token = UUID.randomUUID().toString().replaceAll("-", "");
 
-        redisTemplate.opsForValue().set(RedisConstant.USER_LOGIN_KEY_PREFIX + token, driverId, RedisConstant.USER_LOGIN_KEY_TIMEOUT, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(RedisConstant.USER_LOGIN_KEY_PREFIX + token, driverId.toString(), RedisConstant.USER_LOGIN_KEY_TIMEOUT, TimeUnit.SECONDS);
 
         return token;
+    }
+
+    @Override
+    public DriverLoginVo getDriverInfo(Long driverId) {
+        Result<DriverLoginVo> driverLoginInfo = driverInfoFeignClient.getDriverLoginInfo(driverId);
+        DriverLoginVo driverLoginVo = driverLoginInfo.getData();
+        return driverLoginVo;
     }
 }
