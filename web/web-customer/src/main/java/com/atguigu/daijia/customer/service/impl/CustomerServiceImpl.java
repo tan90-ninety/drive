@@ -71,4 +71,18 @@ public class CustomerServiceImpl implements CustomerService {
         return customerLoginVo;
     }
 
+    @Override
+    public CustomerLoginVo getCustomerInfo(Long customerId) {
+        Result<CustomerLoginVo> customerLoginInfo = client.getCustomerLoginInfo(customerId);
+        Integer codeResult = customerLoginInfo.getCode();
+        if (codeResult != 200) {
+            throw new GuiguException(ResultCodeEnum.FEIGN_FAIL);
+        }
+        CustomerLoginVo customerLoginVo = customerLoginInfo.getData();
+        if (customerLoginVo == null) {
+            throw new GuiguException(ResultCodeEnum.FEIGN_FAIL);
+        }
+        return customerLoginVo;
+    }
+
 }
