@@ -4,6 +4,7 @@ import com.atguigu.daijia.common.login.GuiguLogin;
 import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.common.util.AuthContextHolder;
 import com.atguigu.daijia.driver.service.DriverService;
+import com.atguigu.daijia.model.vo.driver.DriverAuthInfoVo;
 import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +38,14 @@ public class DriverController {
     public Result<DriverLoginVo> getDriverLoginInfo() {
         Long driverId = AuthContextHolder.getUserId();
         return Result.ok(driverService.getDriverInfo(driverId));
+    }
+
+    @Operation(summary = "获取司机认证信息")
+    @GuiguLogin
+    @GetMapping("/getDriverAuthInfo")
+    public Result<DriverAuthInfoVo> getDriverAuthInfo() {
+        Long driverId = AuthContextHolder.getUserId();
+        return Result.ok(driverService.getDriverAuthInfo(driverId));
     }
 }
 
