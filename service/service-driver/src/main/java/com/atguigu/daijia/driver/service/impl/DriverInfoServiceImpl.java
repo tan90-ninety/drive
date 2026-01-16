@@ -5,6 +5,7 @@ import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import com.atguigu.daijia.common.constant.SystemConstant;
 import com.atguigu.daijia.common.execption.GuiguException;
 import com.atguigu.daijia.common.result.ResultCodeEnum;
+import com.atguigu.daijia.driver.config.TencentCloudProperties;
 import com.atguigu.daijia.driver.mapper.DriverAccountMapper;
 import com.atguigu.daijia.driver.mapper.DriverInfoMapper;
 import com.atguigu.daijia.driver.mapper.DriverLoginLogMapper;
@@ -15,17 +16,22 @@ import com.atguigu.daijia.model.entity.driver.DriverAccount;
 import com.atguigu.daijia.model.entity.driver.DriverInfo;
 import com.atguigu.daijia.model.entity.driver.DriverLoginLog;
 import com.atguigu.daijia.model.entity.driver.DriverSet;
+import com.atguigu.daijia.model.form.driver.DriverFaceModelForm;
 import com.atguigu.daijia.model.form.driver.UpdateDriverAuthInfoForm;
 import com.atguigu.daijia.model.vo.driver.DriverAuthInfoVo;
 import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tencentcloudapi.common.Credential;
+import com.tencentcloudapi.common.profile.ClientProfile;
+import com.tencentcloudapi.common.profile.HttpProfile;
+import com.tencentcloudapi.iai.v20180301.IaiClient;
+import com.tencentcloudapi.iai.v20180301.models.CreatePersonRequest;
+import com.tencentcloudapi.iai.v20180301.models.CreatePersonResponse;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -53,6 +59,9 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
 
     @Autowired
     private CosService cosService;
+
+    @Autowired
+    private TencentCloudProperties tencentCloudProperties;
 
     @Override
     public Long login(String code) {
@@ -129,5 +138,40 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
         driverInfo.setId(driverId);
         BeanUtils.copyProperties(updateDriverAuthInfoForm, driverInfo);
         return this.updateById(driverInfo);
+    }
+
+    @Override
+    public Boolean createDriverFaceModel(DriverFaceModelForm driverFaceModelForm) {
+        DriverInfo driverInfo = driverInfoMapper.selectById(driverFaceModelForm.getDriverId());
+        try {
+            Credential cred = new Credential(tencentCloudProperties.getSecretId(), tencentCloudProperties.getSecretKey());
+
+            HttpProfile httpProfile = new HttpProfile();
+            httpProfile.setEndpoint("iai.tencentcloudapi.com");
+            ClientProfile clientProfile = new ClientProfile();
+            clientProfile.setHttpProfile(httpProfile);
+
+            IaiClient client = new IaiClient(cred, tencentCloudProperties.getRegion(), clientProfile);
+            CreatePersonRequest req = new CreatePersonRequest();
+            req.setGroupId(tencentCloudProperties.getPersonGroupId());
+            req.setPersonId(String.valueOf(driverInfo.getId()));
+            req.setGender(Long.parseLong(driverInfo.getGender()));
+            req.setQualityControl(4L);
+            req.setUniquePersonControl(4L);
+            req.setPersonName(driverInfo.getName());
+            req.setImage(driverFaceModelForm.getImageBase64());
+
+            CreatePersonResponse resp = client.CreatePerson(req);
+
+            String faceId = resp.getFaceId();
+            if (StringUtils.hasText(faceId)) {
+                driverInfo.setFaceModelId(faceId);
+                this.updateById(driverInfo);
+            }
+
+        } catch (Exception e) {
+            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+        }
+        return true;
     }
 }
