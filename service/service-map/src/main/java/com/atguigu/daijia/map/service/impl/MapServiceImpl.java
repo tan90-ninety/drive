@@ -21,7 +21,7 @@ import java.util.HashMap;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class MapServiceImpl implements MapService {
 
-    @Value("tencent.cloud.map")
+    @Value("${tencent.map.key}")
     private String key;
 
     @Autowired
@@ -31,8 +31,8 @@ public class MapServiceImpl implements MapService {
     public DrivingLineVo calculateDrivingLine(CalculateDrivingLineForm calculateDrivingLineForm) {
         String url = "https://apis.map.qq.com/ws/direction/v1/driving/?from={from}&to={to}&key={key}";
         HashMap<String, String> map = new HashMap<>();
-        map.put("from", calculateDrivingLineForm.getStartPointLongitude() + "," + calculateDrivingLineForm.getStartPointLatitude());
-        map.put("to", calculateDrivingLineForm.getEndPointLongitude() + "," + calculateDrivingLineForm.getEndPointLatitude());
+        map.put("from", calculateDrivingLineForm.getStartPointLatitude() + "," + calculateDrivingLineForm.getStartPointLongitude());
+        map.put("to", calculateDrivingLineForm.getEndPointLatitude() + "," + calculateDrivingLineForm.getEndPointLongitude());
         map.put("key", key);
         JSONObject result = restTemplate.getForObject(url, JSONObject.class, map);
         if (result == null || result.getIntValue("status") != 0) {
@@ -52,6 +52,6 @@ public class MapServiceImpl implements MapService {
         );
         drivingLineVo.setPolyline(route.getJSONArray("polyline"));
 
-        return null;
+        return drivingLineVo;
     }
 }

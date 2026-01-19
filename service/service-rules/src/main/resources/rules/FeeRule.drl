@@ -42,9 +42,17 @@ rule "里程费 00:00:00-06:59:59 4元/1公里"
         $rule:FeeRuleRequest(startTime >= "00:00:00" && startTime <= "06:59:59" && distance.doubleValue() > 3.0)
     then
         feeRuleResponse.setExceedDistancePrice(new BigDecimal("4.0"));
-
         BigDecimal exceedDistance = $rule.getDistance().subtract(new BigDecimal("3.0"));
         feeRuleResponse.setExceedDistance(exceedDistance);
+end
+rule "里程费 00:00:00-06:59:59 未超出起步里程"
+    salience 10
+    no-loop true
+    when
+        $rule:FeeRuleRequest(startTime >= "00:00:00" && startTime <= "06:59:59" && distance.doubleValue() <= 3.0)
+    then
+        feeRuleResponse.setExceedDistancePrice(new BigDecimal("4.0"));
+        feeRuleResponse.setExceedDistance(new BigDecimal("0.0"));
 end
 rule "里程费 07:00:00-23:59:59 3元/1公里"
     salience 10
@@ -57,7 +65,15 @@ rule "里程费 07:00:00-23:59:59 3元/1公里"
         BigDecimal exceedDistance = $rule.getDistance().subtract(new BigDecimal("3.0"));
         feeRuleResponse.setExceedDistance(exceedDistance);
 end
-
+rule "里程费 07:00:00-23:59:59 未超出起步里程"
+    salience 10
+    no-loop true
+    when
+        $rule:FeeRuleRequest(startTime >= "07:00:00" && startTime <= "23:59:59" && distance.doubleValue() <= 3.0)
+    then
+        feeRuleResponse.setExceedDistancePrice(new BigDecimal("3.0"));
+        feeRuleResponse.setExceedDistance(new BigDecimal("0.0"));
+end
 
 /**
 3.等候费
@@ -131,6 +147,23 @@ rule "计算总金额"
         BigDecimal distanceFee = feeRuleResponse.getBaseDistanceFee().add(feeRuleResponse.getExceedDistance().multiply(feeRuleResponse.getExceedDistancePrice()));
         BigDecimal waitFee = new BigDecimal(feeRuleResponse.getExceedWaitMinute()).multiply(feeRuleResponse.getExceedWaitMinutePrice());
         BigDecimal longDistanceFee = feeRuleResponse.getExceedLongDistance().multiply(feeRuleResponse.getExceedLongDistancePrice());
+        BigDecimal totalAmount = distanceFee.add(waitFee).add(longDistanceFee);
+
+        feeRuleResponse.setDistanceFee(distanceFee);
+        feeRuleResponse.setWaitFee(waitFee);
+        feeRuleResponse.setLongDistanceFee(longDistanceFee);
+        feeRuleResponse.setTotalAmount(totalAmount);
+        System.out.println("计算总金额:" + feeRuleResponse.getTotalAmount() + "元");
+end
+rule "计算0公里时总金额"
+    salience 10
+    no-loop true
+    when
+        $rule:FeeRuleRequest(distance.doubleValue() == 0.0)
+    then
+        BigDecimal distanceFee = new BigDecimal("0.0");
+        BigDecimal waitFee = new BigDecimal(feeRuleResponse.getExceedWaitMinute()).multiply(feeRuleResponse.getExceedWaitMinutePrice());
+        BigDecimal longDistanceFee = new BigDecimal("0.0");
         BigDecimal totalAmount = distanceFee.add(waitFee).add(longDistanceFee);
 
         feeRuleResponse.setDistanceFee(distanceFee);

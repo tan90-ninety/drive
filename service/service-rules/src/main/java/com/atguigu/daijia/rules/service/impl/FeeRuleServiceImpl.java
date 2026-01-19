@@ -31,7 +31,7 @@ public class FeeRuleServiceImpl implements FeeRuleService {
 
         // 开启会话
         KieSession kieSession = kieContainer.newKieSession();
-
+        long id = kieSession.getIdentifier();
         FeeRuleResponse feeRuleResponse = new FeeRuleResponse();
         kieSession.setGlobal("feeRuleResponse", feeRuleResponse);
         // 设置订单对象
@@ -43,6 +43,7 @@ public class FeeRuleServiceImpl implements FeeRuleService {
 
         FeeRuleResponseVo feeRuleResponseVo = new FeeRuleResponseVo();
         BeanUtils.copyProperties(feeRuleResponse, feeRuleResponseVo);
+        feeRuleResponseVo.setFeeRuleId(id);
 
         return feeRuleResponseVo;
     }
