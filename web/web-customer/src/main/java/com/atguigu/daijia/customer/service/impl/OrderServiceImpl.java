@@ -77,4 +77,10 @@ public class OrderServiceImpl implements OrderService {
         Long orderId = orderInfoResult.getData();
         return orderId;
     }
+
+    @Override
+    public Integer getOrderStatus(Long orderId) {
+        Result<Integer> orderStatus = orderInfoFeignClient.getOrderStatus(orderId);
+        return orderStatus.getData();
+    }
 }
