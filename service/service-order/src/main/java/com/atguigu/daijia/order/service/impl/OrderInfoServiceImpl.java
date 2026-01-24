@@ -33,6 +33,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         String orderNo = UUID.randomUUID().toString().replace("-", "");
         orderInfo.setOrderNo(orderNo);
         orderInfo.setStatus(OrderStatus.WAITING_ACCEPT.getStatus());
+        orderInfoMapper.insert(orderInfo);
 
         log(orderInfo.getId(), orderInfo.getStatus());
         return orderInfo.getId();
@@ -41,7 +42,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     @Override
     public Integer getOrderStatus(Long orderId) {
         LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(OrderInfo::getOrderNo, orderId);
+        wrapper.eq(OrderInfo::getId, orderId);
         wrapper.select(OrderInfo::getStatus);
         OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
 

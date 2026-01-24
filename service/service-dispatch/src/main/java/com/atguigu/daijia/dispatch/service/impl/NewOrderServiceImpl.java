@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -97,5 +98,24 @@ public class NewOrderServiceImpl implements NewOrderService {
             redisTemplate.expire(key, RedisConstant.DRIVER_ORDER_TEMP_LIST_EXPIRES_TIME, TimeUnit.MINUTES);
 
         });
+    }
+
+    @Override
+    public List<NewOrderDataVo> findNewOrderQueueData(Long driverId) {
+        String key = RedisConstant.DRIVER_ORDER_TEMP_LIST + driverId;
+        ArrayList<NewOrderDataVo> newOrderDataVoArrayList = new ArrayList<>();
+        Long size = redisTemplate.opsForList().size(key);
+        for (int i = 0; i < size; i++) {
+            String newOrderDataVoJson = (String)redisTemplate.opsForList().leftPop(key);
+            NewOrderDataVo newOrderDataVo = JSONObject.parseObject(newOrderDataVoJson, NewOrderDataVo.class);
+            newOrderDataVoArrayList.add(newOrderDataVo);
+        }
+        return newOrderDataVoArrayList;
+    }
+
+    @Override
+    public Boolean clearNewOrderQueueData(Long driverId) {
+        redisTemplate.delete(RedisConstant.DRIVER_ORDER_TEMP_LIST + driverId);
+        return true;
     }
 }
