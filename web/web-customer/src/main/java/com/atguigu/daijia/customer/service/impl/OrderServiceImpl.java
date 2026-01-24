@@ -2,6 +2,7 @@ package com.atguigu.daijia.customer.service.impl;
 
 import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.customer.service.OrderService;
+import com.atguigu.daijia.dispatch.client.NewOrderFeignClient;
 import com.atguigu.daijia.map.client.MapFeignClient;
 import com.atguigu.daijia.model.form.customer.ExpectOrderForm;
 import com.atguigu.daijia.model.form.customer.SubmitOrderForm;
@@ -9,6 +10,7 @@ import com.atguigu.daijia.model.form.map.CalculateDrivingLineForm;
 import com.atguigu.daijia.model.form.order.OrderInfoForm;
 import com.atguigu.daijia.model.form.rules.FeeRuleRequestForm;
 import com.atguigu.daijia.model.vo.customer.ExpectOrderVo;
+import com.atguigu.daijia.model.vo.dispatch.NewOrderTaskVo;
 import com.atguigu.daijia.model.vo.map.DrivingLineVo;
 import com.atguigu.daijia.model.vo.rules.FeeRuleResponseVo;
 import com.atguigu.daijia.order.client.OrderInfoFeignClient;
@@ -34,6 +36,10 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderInfoFeignClient orderInfoFeignClient;
 
+    @Autowired
+    private NewOrderFeignClient newOrderFeignClient;
+
+    // 预估订单数据
     @Override
     public ExpectOrderVo expectOrder(ExpectOrderForm expectOrderForm) {
         CalculateDrivingLineForm calculateDrivingLineForm = new CalculateDrivingLineForm();
@@ -55,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
         return expectOrderVo;
     }
 
+    // 乘客下单
     @Override
     public Long saveOrderInfo(SubmitOrderForm submitOrderForm) {
         CalculateDrivingLineForm calculateDrivingLineForm = new CalculateDrivingLineForm();
@@ -75,6 +82,13 @@ public class OrderServiceImpl implements OrderService {
         orderInfoForm.setExpectAmount(feeRuleResponseVo.getTotalAmount());
         Result<Long> orderInfoResult = orderInfoFeignClient.saveOrderInfo(orderInfoForm);
         Long orderId = orderInfoResult.getData();
+
+        NewOrderTaskVo newOrderTaskVo = new NewOrderTaskVo();
+        BeanUtils.copyProperties(orderInfoForm, newOrderTaskVo);
+        newOrderTaskVo.setOrderId(orderId);
+        newOrderTaskVo.setExpectTime(drivingLineVo.getDuration());
+        newOrderTaskVo.setCreateTime(new Date());
+        Long jobId = newOrderFeignClient.addAndStartTask(newOrderTaskVo).getData();
         return orderId;
     }
 
