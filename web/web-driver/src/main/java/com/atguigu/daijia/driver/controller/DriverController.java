@@ -62,5 +62,13 @@ public class DriverController {
         driverFaceModelForm.setDriverId(AuthContextHolder.getUserId());
         return Result.ok(driverService.createDriverFaceModel(driverFaceModelForm));
     }
+
+    @Operation(summary = "判断司机当日是否进行过人脸识别")
+    @GuiguLogin
+    @GetMapping("/isFaceRecognition")
+    public Result<Boolean> isFaceRecognition() {
+        Long driverId = AuthContextHolder.getUserId();
+        return Result.ok(driverService.isFaceRecognition(driverId));
+    }
 }
 
