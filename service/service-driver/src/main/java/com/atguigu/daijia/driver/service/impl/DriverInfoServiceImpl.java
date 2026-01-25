@@ -224,6 +224,15 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
         throw new GuiguException(ResultCodeEnum.FACE_FAIL);
     }
 
+    @Override
+    public Boolean updateServiceStatus(Long driverId, Integer status) {
+        DriverSet driverSet = new DriverSet();
+        driverSet.setId(driverId);
+        driverSet.setServiceStatus(status);
+        driverSetMapper.updateById(driverSet);
+        return true;
+    }
+
     private Boolean detectLiveFace(String imageBase64) {
         try{
             Credential cred = new Credential(tencentCloudProperties.getSecretId(), tencentCloudProperties.getSecretKey());

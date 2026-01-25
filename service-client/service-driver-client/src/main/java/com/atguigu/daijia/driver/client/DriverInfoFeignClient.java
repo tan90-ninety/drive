@@ -38,4 +38,8 @@ public interface DriverInfoFeignClient {
 
     @PostMapping("/driver/info/verifyDriverFace")
     Result<Boolean> verifyDriverFace(@RequestBody DriverFaceModelForm driverFaceModelForm);
-}
+
+    @GetMapping("/driver/info/updateServiceStatus/{driverId}/{status}")
+    Result<Boolean> updateServiceStatus(@PathVariable Long driverId, @PathVariable Integer status);
+
+    }
