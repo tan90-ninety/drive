@@ -33,6 +33,9 @@ public interface DriverInfoFeignClient {
     @GetMapping("/driver/info/getDriverSet/{driverId}")
     Result<DriverSet> getDriverSet(@PathVariable("driverId") Long driverId);
 
-    @GetMapping("/isFaceRecognition/{driverId}")
+    @GetMapping("/driver/info/isFaceRecognition/{driverId}")
     Result<Boolean> isFaceRecognition(@PathVariable("driverId") Long driverId);
+
+    @PostMapping("/driver/info/verifyDriverFace")
+    Result<Boolean> verifyDriverFace(@RequestBody DriverFaceModelForm driverFaceModelForm);
 }

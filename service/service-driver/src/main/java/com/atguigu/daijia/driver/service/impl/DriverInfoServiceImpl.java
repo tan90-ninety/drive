@@ -17,11 +17,11 @@ import com.atguigu.daijia.model.vo.driver.DriverLoginVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tencentcloudapi.common.Credential;
+import com.tencentcloudapi.common.exception.TencentCloudSDKException;
 import com.tencentcloudapi.common.profile.ClientProfile;
 import com.tencentcloudapi.common.profile.HttpProfile;
-import com.tencentcloudapi.iai.v20180301.IaiClient;
-import com.tencentcloudapi.iai.v20180301.models.CreatePersonRequest;
-import com.tencentcloudapi.iai.v20180301.models.CreatePersonResponse;
+import com.tencentcloudapi.iai.v20200303.IaiClient;
+import com.tencentcloudapi.iai.v20200303.models.*;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.joda.time.DateTime;
@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Slf4j
 @Service
@@ -188,5 +189,60 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
 
         Long count = driverFaceRecognitionMapper.selectCount(wrapper);
         return count != 0;
+    }
+
+    @Override
+    public Boolean verifyDriverFace(DriverFaceModelForm driverFaceModelForm) {
+        try {
+            Credential cred = new Credential(tencentCloudProperties.getSecretId(), tencentCloudProperties.getSecretKey());
+            HttpProfile httpProfile = new HttpProfile();
+            httpProfile.setEndpoint("iai.tencentcloudapi.com");
+            ClientProfile clientProfile = new ClientProfile();
+            clientProfile.setHttpProfile(httpProfile);
+            IaiClient client = new IaiClient(cred, tencentCloudProperties.getRegion(), clientProfile);
+
+            VerifyFaceRequest req = new VerifyFaceRequest();
+            req.setImage(driverFaceModelForm.getImageBase64());
+            req.setPersonId(String.valueOf(driverFaceModelForm.getDriverId()));
+            VerifyFaceResponse resp = client.VerifyFace(req);
+
+            if (!resp.getIsMatch()) {
+                throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+            }
+            Boolean isSuccess = this.detectLiveFace(driverFaceModelForm.getImageBase64());
+            if (!isSuccess) {
+                throw new GuiguException(ResultCodeEnum.FACE_FAIL);
+            }
+            DriverFaceRecognition driverFaceRecognition = new DriverFaceRecognition();
+            driverFaceRecognition.setDriverId(driverFaceModelForm.getDriverId());
+            driverFaceRecognition.setFaceDate(new Date());
+            driverFaceRecognitionMapper.insert(driverFaceRecognition);
+            return true;
+        } catch (TencentCloudSDKException e) {
+            System.out.println(e);
+        }
+        throw new GuiguException(ResultCodeEnum.FACE_FAIL);
+    }
+
+    private Boolean detectLiveFace(String imageBase64) {
+        try{
+            Credential cred = new Credential(tencentCloudProperties.getSecretId(), tencentCloudProperties.getSecretKey());
+            HttpProfile httpProfile = new HttpProfile();
+            httpProfile.setEndpoint("iai.tencentcloudapi.com");
+            ClientProfile clientProfile = new ClientProfile();
+            clientProfile.setHttpProfile(httpProfile);
+            IaiClient client = new IaiClient(cred, tencentCloudProperties.getRegion(), clientProfile);
+
+            DetectLiveFaceAccurateRequest req = new DetectLiveFaceAccurateRequest();
+            req.setImage(imageBase64);
+            DetectLiveFaceAccurateResponse resp = client.DetectLiveFaceAccurate(req);
+
+            if(resp.getScore() >= 40) {
+                return true;
+            }
+        } catch (TencentCloudSDKException e) {
+            System.out.println(e);
+        }
+        return false;
     }
 }

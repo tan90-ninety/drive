@@ -68,4 +68,10 @@ public class DriverServiceImpl implements DriverService {
         Result<Boolean> faceRecognition = driverInfoFeignClient.isFaceRecognition(driverId);
         return faceRecognition.getData();
     }
+
+    @Override
+    public Boolean verifyDriverFace(DriverFaceModelForm driverFaceModelForm) {
+        Result<Boolean> booleanResult = driverInfoFeignClient.verifyDriverFace(driverFaceModelForm);
+        return booleanResult.getData();
+    }
 }

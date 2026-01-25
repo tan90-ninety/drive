@@ -41,11 +41,12 @@ public enum ResultCodeEnum {
     IMAGE_AUDITION_FAIL( 217, "图片审核不通过"),
     AUTH_ERROR( 217, "认证通过后才可以开启代驾服务"),
     FACE_ERROR( 250, "当日未进行人脸识别"),
+    FACE_FAIL(250, "活体检测失败"),
 
     COUPON_EXPIRE( 250, "优惠券已过期"),
     COUPON_LESS( 250, "优惠券库存不足"),
-    COUPON_USER_LIMIT( 250, "超出领取数量"),
-    ;
+    COUPON_USER_LIMIT( 250, "超出领取数量");
+
 
     private Integer code;
 
