@@ -17,4 +17,7 @@ public interface OrderInfoFeignClient {
 
     @GetMapping("/order/info/getOrderStatus/{orderId}")
     Result<Integer> getOrderStatus(@PathVariable("orderId") Long orderId);
+
+    @GetMapping("/order/info/robNewOrder/{driverId}/{orderId}")
+    Result<Boolean> robNewOrder(@PathVariable Long driverId, @PathVariable Long orderId);
 }
