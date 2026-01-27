@@ -6,6 +6,7 @@ import com.atguigu.daijia.common.util.AuthContextHolder;
 import com.atguigu.daijia.driver.service.OrderService;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.model.vo.order.NewOrderDataVo;
+import com.atguigu.daijia.model.vo.order.OrderInfoVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -38,17 +39,16 @@ public class OrderController {
     @GuiguLogin
     @GetMapping("/findNewOrderQueueData")
     public Result<List<NewOrderDataVo>> findNewOrderQueueData() {
-        Long DriverId = AuthContextHolder.getUserId();
-        return Result.ok(orderService.findNewOrderQueueData(DriverId));
+        Long driverId = AuthContextHolder.getUserId();
+        return Result.ok(orderService.findNewOrderQueueData(driverId));
     }
 
     @Operation(summary = "查找司机端当前订单")
     @GuiguLogin
     @GetMapping("/searchDriverCurrentOrder")
     public Result<CurrentOrderInfoVo> searchDriverCurrentOrder() {
-        CurrentOrderInfoVo vo = new CurrentOrderInfoVo();
-        vo.setIsHasCurrentOrder(false);
-        return Result.ok(vo);
+        Long driverId = AuthContextHolder.getUserId();
+        return Result.ok(orderService.searchDriverCurrentOrder(driverId));
     }
 
     @Operation(summary = "司机抢单")
@@ -59,6 +59,13 @@ public class OrderController {
         return Result.ok(orderService.robNewOrder(driverId, orderId));
     }
 
+    @Operation(summary = "获取订单账单详细信息")
+    @GuiguLogin
+    @GetMapping("/getOrderInfo/{orderId}")
+    public Result<OrderInfoVo> getOrderInfo(@PathVariable Long orderId) {
+        Long driverId = AuthContextHolder.getUserId();
+        return Result.ok(orderService.getOrderInfo(orderId, driverId));
+    }
 
 }
 

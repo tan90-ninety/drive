@@ -7,6 +7,7 @@ import com.atguigu.daijia.model.entity.order.OrderInfo;
 import com.atguigu.daijia.model.entity.order.OrderStatusLog;
 import com.atguigu.daijia.model.enums.OrderStatus;
 import com.atguigu.daijia.model.form.order.OrderInfoForm;
+import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
 import com.atguigu.daijia.order.mapper.OrderStatusLogMapper;
 import com.atguigu.daijia.order.service.OrderInfoService;
@@ -97,6 +98,65 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             }
         }
         return true;
+    }
+
+    @Override
+    public CurrentOrderInfoVo searchCustomerCurrentOrder(Long customerId) {
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderInfo::getCustomerId, customerId);
+        Integer[] statusArray = {
+                OrderStatus.ACCEPTED.getStatus(),
+                OrderStatus.DRIVER_ARRIVED.getStatus(),
+                OrderStatus.UPDATE_CART_INFO.getStatus(),
+                OrderStatus.START_SERVICE.getStatus(),
+                OrderStatus.END_SERVICE.getStatus(),
+                OrderStatus.UNPAID.getStatus()
+        };
+        wrapper.in(OrderInfo::getStatus, (Object) statusArray);
+        wrapper.orderByAsc(OrderInfo::getId);
+        wrapper.last("limit 1");
+        OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
+        CurrentOrderInfoVo currentOrderInfoVo = new CurrentOrderInfoVo();
+        if (orderInfo != null) {
+            currentOrderInfoVo.setOrderId(orderInfo.getId());
+            currentOrderInfoVo.setIsHasCurrentOrder(true);
+            currentOrderInfoVo.setStatus(orderInfo.getStatus());
+        } else {
+            currentOrderInfoVo.setIsHasCurrentOrder(false);
+        }
+        return currentOrderInfoVo;
+    }
+
+    @Override
+    public CurrentOrderInfoVo searchDriverCurrentOrder(Long driverId) {
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderInfo::getCustomerId, driverId);
+        Integer[] statusArray = {
+                OrderStatus.ACCEPTED.getStatus(),
+                OrderStatus.DRIVER_ARRIVED.getStatus(),
+                OrderStatus.UPDATE_CART_INFO.getStatus(),
+                OrderStatus.START_SERVICE.getStatus(),
+                OrderStatus.END_SERVICE.getStatus(),
+                OrderStatus.UNPAID.getStatus()
+        };
+        wrapper.in(OrderInfo::getStatus, (Object) statusArray);
+        wrapper.orderByAsc(OrderInfo::getId);
+        wrapper.last("limit 1");
+        OrderInfo orderInfo = orderInfoMapper.selectOne(wrapper);
+        CurrentOrderInfoVo currentOrderInfoVo = new CurrentOrderInfoVo();
+        if (orderInfo != null) {
+            currentOrderInfoVo.setOrderId(orderInfo.getId());
+            currentOrderInfoVo.setIsHasCurrentOrder(true);
+            currentOrderInfoVo.setStatus(orderInfo.getStatus());
+        } else {
+            currentOrderInfoVo.setIsHasCurrentOrder(false);
+        }
+        return currentOrderInfoVo;
+    }
+
+    @Override
+    public OrderInfo getOrderInfo(Long orderId) {
+        return orderInfoMapper.selectById(orderId);
     }
 
     public void log(Long orderId, Integer status) {
