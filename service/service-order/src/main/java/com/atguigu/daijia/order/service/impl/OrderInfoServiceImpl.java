@@ -12,6 +12,7 @@ import com.atguigu.daijia.order.mapper.OrderInfoMapper;
 import com.atguigu.daijia.order.mapper.OrderStatusLogMapper;
 import com.atguigu.daijia.order.service.OrderInfoService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -157,6 +158,24 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     @Override
     public OrderInfo getOrderInfo(Long orderId) {
         return orderInfoMapper.selectById(orderId);
+    }
+
+    @Override
+    public Boolean driverArriveStartLocation(Long orderId, Long driverId) {
+        LambdaUpdateWrapper<OrderInfo> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(OrderInfo::getId, orderId);
+        wrapper.eq(OrderInfo::getDriverId, driverId);
+
+        OrderInfo orderInfo = new OrderInfo();
+        orderInfo.setStatus(OrderStatus.DRIVER_ARRIVED.getStatus());
+        orderInfo.setArriveTime(new Date());
+
+        int rows = orderInfoMapper.update(orderInfo, wrapper);
+        if (rows != 1) {
+            throw new GuiguException(ResultCodeEnum.COB_NEW_ORDER_FAIL);
+        }
+        log(orderId, OrderStatus.DRIVER_ARRIVED.getStatus());
+        return true;
     }
 
     public void log(Long orderId, Integer status) {
