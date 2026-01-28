@@ -145,4 +145,9 @@ public class OrderServiceImpl implements OrderService {
     public OrderLocationVo getCacheOrderLocation(Long orderId) {
         return locationFeignClient.getCacheOrderLocation(orderId).getData();
     }
+
+    @Override
+    public DrivingLineVo calculateDrivingLine(CalculateDrivingLineForm calculateDrivingLineForm) {
+        return mapFeignClient.calculateDrivingLine(calculateDrivingLineForm).getData();
+    }
 }

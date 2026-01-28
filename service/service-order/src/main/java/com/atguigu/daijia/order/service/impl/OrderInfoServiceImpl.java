@@ -7,6 +7,7 @@ import com.atguigu.daijia.model.entity.order.OrderInfo;
 import com.atguigu.daijia.model.entity.order.OrderStatusLog;
 import com.atguigu.daijia.model.enums.OrderStatus;
 import com.atguigu.daijia.model.form.order.OrderInfoForm;
+import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
 import com.atguigu.daijia.order.mapper.OrderStatusLogMapper;
@@ -52,6 +53,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
 
         log(orderInfo.getId(), orderInfo.getStatus());
 
+        // 接单标识
         redisTemplate.opsForValue().set(RedisConstant.ORDER_ACCEPT_MARK + orderInfo.getId(), "0", RedisConstant.ORDER_ACCEPT_MARK_EXPIRES_TIME, TimeUnit.MINUTES);
 
         return orderInfo.getId();
@@ -172,9 +174,27 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
 
         int rows = orderInfoMapper.update(orderInfo, wrapper);
         if (rows != 1) {
-            throw new GuiguException(ResultCodeEnum.COB_NEW_ORDER_FAIL);
+            throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
         }
         log(orderId, OrderStatus.DRIVER_ARRIVED.getStatus());
+        return true;
+    }
+
+    @Override
+    public Boolean updateOrderCart(UpdateOrderCartForm updateOrderCartForm) {
+        LambdaUpdateWrapper<OrderInfo> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(OrderInfo::getId, updateOrderCartForm.getOrderId());
+        wrapper.eq(OrderInfo::getDriverId, updateOrderCartForm.getDriverId());
+
+        OrderInfo orderInfo = new OrderInfo();
+        BeanUtils.copyProperties(updateOrderCartForm, orderInfo);
+        orderInfo.setStatus(OrderStatus.UPDATE_CART_INFO.getStatus());
+
+        int rows = orderInfoMapper.update(orderInfo, wrapper);
+        if (rows != 1) {
+            throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
+        }
+        log(updateOrderCartForm.getOrderId(), OrderStatus.DRIVER_ARRIVED.getStatus());
         return true;
     }
 

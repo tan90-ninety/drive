@@ -38,6 +38,8 @@ public class GuiguLoginAspect {
         String customerId = (String) redisTemplate.opsForValue().get(RedisConstant.USER_LOGIN_KEY_PREFIX + token);
         if (StringUtils.hasText(customerId)) {
             AuthContextHolder.setUserId(Long.parseLong(customerId));
+        } else {
+            throw new GuiguException(ResultCodeEnum.LOGIN_AUTH);
         }
 
         return proceedingJoinPoint.proceed();
