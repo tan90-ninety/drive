@@ -7,6 +7,7 @@ import com.atguigu.daijia.model.entity.order.OrderInfo;
 import com.atguigu.daijia.model.entity.order.OrderStatusLog;
 import com.atguigu.daijia.model.enums.OrderStatus;
 import com.atguigu.daijia.model.form.order.OrderInfoForm;
+import com.atguigu.daijia.model.form.order.StartDriveForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
@@ -195,6 +196,17 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
         }
         log(updateOrderCartForm.getOrderId(), OrderStatus.DRIVER_ARRIVED.getStatus());
+        return true;
+    }
+
+    @Override
+    public Boolean startDrive(StartDriveForm startDriveForm) {
+        LambdaUpdateWrapper<OrderInfo> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(OrderInfo::getId, startDriveForm.getOrderId());
+        wrapper.eq(OrderInfo::getStatus, OrderStatus.DRIVER_ARRIVED.getStatus());
+        wrapper.set(OrderInfo::getStatus, OrderStatus.START_SERVICE.getStatus());
+        wrapper.set(OrderInfo::getStartServiceTime, new Date());
+        this.update(wrapper);
         return true;
     }
 
