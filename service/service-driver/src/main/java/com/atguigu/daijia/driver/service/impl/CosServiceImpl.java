@@ -3,6 +3,7 @@ package com.atguigu.daijia.driver.service.impl;
 import com.atguigu.daijia.common.execption.GuiguException;
 import com.atguigu.daijia.common.result.ResultCodeEnum;
 import com.atguigu.daijia.driver.config.TencentCloudProperties;
+import com.atguigu.daijia.driver.service.CiService;
 import com.atguigu.daijia.driver.service.CosService;
 import com.atguigu.daijia.model.vo.driver.CosUploadVo;
 import com.qcloud.cos.COSClient;
@@ -31,6 +32,9 @@ public class CosServiceImpl implements CosService {
     @Autowired
     private TencentCloudProperties tencentCloudProperties;
 
+    @Autowired
+    private CiService ciService;
+
     @Override
     public CosUploadVo upload(MultipartFile file, String path) {
         COSClient cosClient = getCosClient();
@@ -54,6 +58,11 @@ public class CosServiceImpl implements CosService {
         PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest);
         cosClient.shutdown();
 
+        Boolean imageAuditing = ciService.imageAuditing(uploadPath);
+        if (!imageAuditing) {
+            cosClient.deleteObject(tencentCloudProperties.getBucketPrivate(), uploadPath);
+            throw new GuiguException(ResultCodeEnum.IMAGE_AUDITION_FAIL);
+        }
 
         CosUploadVo cosUploadVo = new CosUploadVo();
         cosUploadVo.setShowUrl(getImageUrl(uploadPath));
