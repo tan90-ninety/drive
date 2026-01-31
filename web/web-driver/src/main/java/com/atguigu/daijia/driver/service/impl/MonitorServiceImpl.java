@@ -3,6 +3,7 @@ package com.atguigu.daijia.driver.service.impl;
 import com.atguigu.daijia.driver.client.CiFeignClient;
 import com.atguigu.daijia.driver.service.FileService;
 import com.atguigu.daijia.driver.service.MonitorService;
+import com.atguigu.daijia.model.entity.order.OrderMonitor;
 import com.atguigu.daijia.model.entity.order.OrderMonitorRecord;
 import com.atguigu.daijia.model.form.order.OrderMonitorForm;
 import com.atguigu.daijia.model.vo.order.TextAuditingVo;
@@ -40,6 +41,15 @@ public class MonitorServiceImpl implements MonitorService {
         orderMonitorRecord.setKeywords(textAuditingVo.getKeywords());
 
         orderMonitorFeignClient.saveMonitorRecord(orderMonitorRecord);
+
+        //更新订单监控统计
+        OrderMonitor orderMonitor = orderMonitorFeignClient.getOrderMonitor(orderMonitorForm.getOrderId()).getData();
+        orderMonitor.setFileNum(orderMonitor.getFileNum() + 1);
+        if("3".equals(orderMonitorRecord.getResult())) {
+            orderMonitor.setAuditNum(orderMonitor.getAuditNum() + 1);
+        }
+        orderMonitorFeignClient.updateOrderMonitor(orderMonitor);
+
         return true;
     }
 }

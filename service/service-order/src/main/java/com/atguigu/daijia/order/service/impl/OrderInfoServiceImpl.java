@@ -4,6 +4,7 @@ import com.atguigu.daijia.common.constant.RedisConstant;
 import com.atguigu.daijia.common.execption.GuiguException;
 import com.atguigu.daijia.common.result.ResultCodeEnum;
 import com.atguigu.daijia.model.entity.order.OrderInfo;
+import com.atguigu.daijia.model.entity.order.OrderMonitor;
 import com.atguigu.daijia.model.entity.order.OrderStatusLog;
 import com.atguigu.daijia.model.enums.OrderStatus;
 import com.atguigu.daijia.model.form.order.OrderInfoForm;
@@ -13,6 +14,7 @@ import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
 import com.atguigu.daijia.order.mapper.OrderStatusLogMapper;
 import com.atguigu.daijia.order.service.OrderInfoService;
+import com.atguigu.daijia.order.service.OrderMonitorService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -36,6 +38,9 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
 
     @Autowired
     private OrderStatusLogMapper orderStatusLogMapper;
+
+    @Autowired
+    private OrderMonitorService orderMonitorService;
 
     @Autowired
     private RedisTemplate redisTemplate;
@@ -206,7 +211,16 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         wrapper.eq(OrderInfo::getStatus, OrderStatus.DRIVER_ARRIVED.getStatus());
         wrapper.set(OrderInfo::getStatus, OrderStatus.START_SERVICE.getStatus());
         wrapper.set(OrderInfo::getStartServiceTime, new Date());
-        this.update(wrapper);
+        boolean isUpdate = this.update(wrapper);
+        if(isUpdate) {
+            this.log(startDriveForm.getOrderId(), OrderStatus.START_SERVICE.getStatus());
+        } else {
+            throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
+        }
+
+        OrderMonitor orderMonitor = new OrderMonitor();
+        orderMonitor.setOrderId(startDriveForm.getOrderId());
+        orderMonitorService.saveOrderMonitor(orderMonitor);
         return true;
     }
 
