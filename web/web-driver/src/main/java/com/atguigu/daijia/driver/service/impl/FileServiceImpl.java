@@ -45,16 +45,16 @@ public class FileServiceImpl implements FileService {
             // 设置存储对象名称
             String extFileName = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
             String fileName = new SimpleDateFormat("yyyyMMdd")
-                    .format(new Date()) + "/" + UUID.randomUUID().toString().replace("-" , "") + "." + extFileName;
+                    .format(new Date()) + "/" + UUID.randomUUID().toString().replace("-", "") + extFileName;
 
             PutObjectArgs putObjectArgs = PutObjectArgs.builder()
                     .bucket(minioProperties.getBucketName())
                     .stream(file.getInputStream(), file.getSize(), -1)
                     .object(fileName)
                     .build();
-            minioClient.putObject(putObjectArgs) ;
+            minioClient.putObject(putObjectArgs);
 
-            return minioProperties.getEndpointUrl() + "/" + minioProperties.getBucketName() + "/" + fileName ;
+            return minioProperties.getEndpointUrl() + "/" + minioProperties.getBucketName() + "/" + fileName;
 
         } catch (Exception e) {
             throw new GuiguException(ResultCodeEnum.DATA_ERROR);

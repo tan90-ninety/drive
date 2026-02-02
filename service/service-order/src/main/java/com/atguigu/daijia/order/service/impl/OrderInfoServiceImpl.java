@@ -215,7 +215,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     public Boolean startDrive(StartDriveForm startDriveForm) {
         LambdaUpdateWrapper<OrderInfo> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(OrderInfo::getId, startDriveForm.getOrderId());
-        wrapper.eq(OrderInfo::getStatus, OrderStatus.DRIVER_ARRIVED.getStatus());
+        wrapper.eq(OrderInfo::getStatus, OrderStatus.UPDATE_CART_INFO.getStatus());
         wrapper.set(OrderInfo::getStatus, OrderStatus.START_SERVICE.getStatus());
         wrapper.set(OrderInfo::getStartServiceTime, new Date());
         boolean isUpdate = this.update(wrapper);
@@ -243,7 +243,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     public Boolean endDrive(UpdateOrderBillForm updateOrderBillForm) {
         LambdaUpdateWrapper<OrderInfo> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(OrderInfo::getId, updateOrderBillForm.getOrderId());
-        wrapper.eq(OrderInfo::getStatus, OrderStatus.DRIVER_ARRIVED.getStatus());
+        wrapper.eq(OrderInfo::getStatus, OrderStatus.START_SERVICE.getStatus());
         wrapper.eq(OrderInfo::getDriverId, updateOrderBillForm.getDriverId());
 
         wrapper.set(OrderInfo::getStatus, OrderStatus.END_SERVICE.getStatus());
