@@ -3,15 +3,16 @@ package com.atguigu.daijia.order.service.impl;
 import com.atguigu.daijia.common.constant.RedisConstant;
 import com.atguigu.daijia.common.execption.GuiguException;
 import com.atguigu.daijia.common.result.ResultCodeEnum;
-import com.atguigu.daijia.model.entity.order.OrderInfo;
-import com.atguigu.daijia.model.entity.order.OrderMonitor;
-import com.atguigu.daijia.model.entity.order.OrderStatusLog;
+import com.atguigu.daijia.model.entity.order.*;
 import com.atguigu.daijia.model.enums.OrderStatus;
 import com.atguigu.daijia.model.form.order.OrderInfoForm;
 import com.atguigu.daijia.model.form.order.StartDriveForm;
+import com.atguigu.daijia.model.form.order.UpdateOrderBillForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
+import com.atguigu.daijia.order.mapper.OrderBillMapper;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
+import com.atguigu.daijia.order.mapper.OrderProfitsharingMapper;
 import com.atguigu.daijia.order.mapper.OrderStatusLogMapper;
 import com.atguigu.daijia.order.service.OrderInfoService;
 import com.atguigu.daijia.order.service.OrderMonitorService;
@@ -47,6 +48,12 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private OrderBillMapper orderBillMapper;
+
+    @Autowired
+    private OrderProfitsharingMapper orderProfitsharingMapper;
 
     @Override
     public Long saveOrderInfo(OrderInfoForm orderInfoForm) {
@@ -230,6 +237,38 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         queryWrapper.ge(OrderInfo::getStartServiceTime, startTime);
         queryWrapper.lt(OrderInfo::getStartServiceTime, endTime);
         return orderInfoMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public Boolean endDrive(UpdateOrderBillForm updateOrderBillForm) {
+        LambdaUpdateWrapper<OrderInfo> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(OrderInfo::getId, updateOrderBillForm.getOrderId());
+        wrapper.eq(OrderInfo::getStatus, OrderStatus.DRIVER_ARRIVED.getStatus());
+        wrapper.eq(OrderInfo::getDriverId, updateOrderBillForm.getDriverId());
+
+        wrapper.set(OrderInfo::getStatus, OrderStatus.END_SERVICE.getStatus());
+        wrapper.set(OrderInfo::getEndServiceTime, new Date());
+        wrapper.set(OrderInfo::getRealAmount, updateOrderBillForm.getTotalAmount());
+        wrapper.set(OrderInfo::getFavourFee, updateOrderBillForm.getFavourFee());
+        wrapper.set(OrderInfo::getRealDistance, updateOrderBillForm.getRealDistance());
+
+        boolean update = this.update(wrapper);
+        if(update) {
+            OrderBill orderBill = new OrderBill();
+            BeanUtils.copyProperties(updateOrderBillForm, orderBill);
+            orderBill.setPayAmount(updateOrderBillForm.getTotalAmount());
+            orderBillMapper.insert(orderBill);
+
+            OrderProfitsharing orderProfitsharing = new OrderProfitsharing();
+            BeanUtils.copyProperties(updateOrderBillForm, orderProfitsharing);
+            orderProfitsharing.setOrderId(updateOrderBillForm.getOrderId());
+            orderProfitsharing.setRuleId(updateOrderBillForm.getProfitsharingRuleId());
+            orderProfitsharing.setStatus(1);
+            orderProfitsharingMapper.insert(orderProfitsharing);
+        } else {
+            throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
+        }
+        return null;
     }
 
     public void log(Long orderId, Integer status) {
