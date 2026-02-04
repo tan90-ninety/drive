@@ -14,6 +14,7 @@ import com.atguigu.daijia.model.form.customer.SubmitOrderForm;
 import com.atguigu.daijia.model.form.map.CalculateDrivingLineForm;
 import com.atguigu.daijia.model.form.order.OrderInfoForm;
 import com.atguigu.daijia.model.form.rules.FeeRuleRequestForm;
+import com.atguigu.daijia.model.vo.base.PageVo;
 import com.atguigu.daijia.model.vo.customer.ExpectOrderVo;
 import com.atguigu.daijia.model.vo.dispatch.NewOrderTaskVo;
 import com.atguigu.daijia.model.vo.driver.DriverInfoVo;
@@ -22,6 +23,7 @@ import com.atguigu.daijia.model.vo.map.OrderLocationVo;
 import com.atguigu.daijia.model.vo.map.OrderServiceLastLocationVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
 import com.atguigu.daijia.model.vo.order.OrderInfoVo;
+import com.atguigu.daijia.model.vo.order.OrderListVo;
 import com.atguigu.daijia.model.vo.rules.FeeRuleResponseVo;
 import com.atguigu.daijia.order.client.OrderInfoFeignClient;
 import com.atguigu.daijia.rules.client.FeeRuleFeignClient;
@@ -155,5 +157,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderServiceLastLocationVo getOrderServiceLastLocation(Long orderId) {
         return locationFeignClient.getOrderServiceLastLocation(orderId).getData();
+    }
+
+    @Override
+    public PageVo<OrderListVo> findCustomerOrderPage(Long customerId, Long page, Long limit) {
+        return orderInfoFeignClient.findCustomerOrderPage(customerId, page, limit).getData();
     }
 }

@@ -6,9 +6,13 @@ import com.atguigu.daijia.model.form.order.OrderInfoForm;
 import com.atguigu.daijia.model.form.order.StartDriveForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderBillForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
+import com.atguigu.daijia.model.vo.base.PageVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
+import com.atguigu.daijia.model.vo.order.OrderListVo;
 import com.atguigu.daijia.order.service.OrderInfoService;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +20,10 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "订单API接口管理")
 @RestController
-@RequestMapping(value="/order/info")
+@RequestMapping(value = "/order/info")
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class OrderInfoController {
-	@Autowired
+    @Autowired
     private OrderInfoService orderInfoService;
 
     @Operation(summary = "保存订单信息")
@@ -86,6 +90,24 @@ public class OrderInfoController {
     @PostMapping("/endDrive")
     public Result<Boolean> endDrive(@RequestBody UpdateOrderBillForm updateOrderBillForm) {
         return Result.ok(orderInfoService.endDrive(updateOrderBillForm));
+    }
+
+    @Operation(summary = "获取乘客订单分页列表")
+    @GetMapping("/findCustomerOrderPage/{customerId}/{page}/{limit}")
+    public Result<PageVo<OrderListVo>> findCustomerOrderPage(
+            @Parameter(name = "customerId", description = "乘客id", required = true)
+            @PathVariable Long customerId,
+
+            @Parameter(name = "page", description = "当前页码", required = true)
+            @PathVariable Long page,
+
+            @Parameter(name = "limit", description = "每页记录数", required = true)
+            @PathVariable Long limit) {
+        Page<OrderInfo> pageParam = new Page<>(page, limit);
+        PageVo<OrderListVo> pageVo = orderInfoService.findCustomerOrderPage(pageParam, customerId);
+        pageVo.setPage(page);
+        pageVo.setLimit(limit);
+        return Result.ok(pageVo);
     }
 }
 
