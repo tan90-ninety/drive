@@ -36,4 +36,6 @@ public interface OrderInfoService extends IService<OrderInfo> {
     Boolean endDrive(UpdateOrderBillForm updateOrderBillForm);
 
     PageVo<OrderListVo> findCustomerOrderPage(Page<OrderInfo> pageParam, Long customerId);
+
+    PageVo<OrderListVo> findDriverOrderPage(Page<OrderInfo> pageParam, Long driverId);
 }

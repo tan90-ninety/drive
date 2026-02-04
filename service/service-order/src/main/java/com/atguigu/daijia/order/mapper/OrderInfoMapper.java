@@ -11,4 +11,6 @@ import org.apache.ibatis.annotations.Mapper;
 public interface OrderInfoMapper extends BaseMapper<OrderInfo> {
 
     IPage<OrderListVo> selectCustomerOrderPage(Page<OrderInfo> pageParam, Long customerId);
+
+    IPage<OrderListVo> selectDriverOrderPage(Page<OrderInfo> pageParam, Long driverId);
 }
