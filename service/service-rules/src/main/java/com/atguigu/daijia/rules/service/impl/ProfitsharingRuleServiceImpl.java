@@ -1,6 +1,5 @@
 package com.atguigu.daijia.rules.service.impl;
 
-import com.atguigu.daijia.model.entity.rule.ProfitsharingRule;
 import com.atguigu.daijia.model.form.rules.ProfitsharingRuleRequest;
 import com.atguigu.daijia.model.form.rules.ProfitsharingRuleRequestForm;
 import com.atguigu.daijia.model.vo.rules.ProfitsharingRuleResponse;
@@ -8,14 +7,11 @@ import com.atguigu.daijia.model.vo.rules.ProfitsharingRuleResponseVo;
 import com.atguigu.daijia.rules.mapper.ProfitsharingRuleMapper;
 import com.atguigu.daijia.rules.service.ProfitsharingRuleService;
 import com.atguigu.daijia.rules.utils.DroolsHelper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -50,6 +46,7 @@ public class ProfitsharingRuleServiceImpl implements ProfitsharingRuleService {
         //封装返回对象
         ProfitsharingRuleResponseVo profitsharingRuleResponseVo = new ProfitsharingRuleResponseVo();
         BeanUtils.copyProperties(profitsharingRuleResponse, profitsharingRuleResponseVo);
+        profitsharingRuleResponseVo.setProfitsharingRuleId(1L);
         return profitsharingRuleResponseVo;
     }
 }

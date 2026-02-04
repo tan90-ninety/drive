@@ -8,7 +8,9 @@ import com.atguigu.daijia.model.form.order.UpdateOrderBillForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.base.PageVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
+import com.atguigu.daijia.model.vo.order.OrderBillVo;
 import com.atguigu.daijia.model.vo.order.OrderListVo;
+import com.atguigu.daijia.model.vo.order.OrderProfitsharingVo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,8 +48,8 @@ public interface OrderInfoFeignClient {
     @PostMapping("/order/info/startDrive")
     Result<Boolean> startDrive(@RequestBody StartDriveForm startDriveForm);
 
-    @GetMapping("/order/info/getOrderNumByTime/{startTime}/{endTime}")
-    Result<Long> getOrderNumByTime(@PathVariable("startTime") String startTime, @PathVariable("endTime") String endTime);
+    @GetMapping("/order/info/getOrderNumByTime/{driverId}/{startTime}/{endTime}")
+    Result<Long> getOrderNumByTime(@PathVariable("driverId") Long driverId, @PathVariable("startTime") String startTime, @PathVariable("endTime") String endTime);
 
     @PostMapping("/order/info/endDrive")
     Result<Boolean> endDrive(@RequestBody UpdateOrderBillForm updateOrderBillForm);
@@ -59,6 +61,15 @@ public interface OrderInfoFeignClient {
 
     @GetMapping("/order/info/findDriverOrderPage/{driverId}/{page}/{limit}")
     Result<PageVo<OrderListVo>> findDriverOrderPage(@PathVariable("driverId") Long driverId,
-                                       @PathVariable("page") Long page,
-                                       @PathVariable("limit") Long limit);
+                                                    @PathVariable("page") Long page,
+                                                    @PathVariable("limit") Long limit);
+
+    @GetMapping("/order/info/getOrderBillInfo/{orderId}")
+    Result<OrderBillVo> getOrderBillInfo(@PathVariable("orderId") Long orderId);
+
+    @GetMapping("/order/info/getOrderProfitsharing/{orderId}")
+    Result<OrderProfitsharingVo> getOrderProfitsharing(@PathVariable("orderId") Long orderId);
+
+    @GetMapping("/order/info/sendOrderBillInfo/{orderId}/{driverId}")
+    Result<Boolean> sendOrderBillInfo(@PathVariable("orderId") Long orderId, @PathVariable("driverId") Long driverId);
 }

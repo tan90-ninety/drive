@@ -10,10 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.kie.api.runtime.KieSession;
 import org.springframework.stereotype.Service;
 
-import java.text.DateFormat;
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @Slf4j
 @Service
@@ -40,7 +39,9 @@ public class RewardRuleServiceImpl implements RewardRuleService {
         kieSession.dispose();
 
         RewardRuleResponseVo rewardRuleResponseVo = new RewardRuleResponseVo();
-        rewardRuleResponseVo.setRewardAmount(rewardRuleResponse.getRewardAmount());
+        BigDecimal rewardAmount = rewardRuleResponse.getRewardAmount();
+        rewardRuleResponseVo.setRewardAmount(rewardAmount == null ? BigDecimal.ZERO : rewardAmount);
+        rewardRuleResponseVo.setRewardRuleId(1L);
         return rewardRuleResponseVo;
     }
 }

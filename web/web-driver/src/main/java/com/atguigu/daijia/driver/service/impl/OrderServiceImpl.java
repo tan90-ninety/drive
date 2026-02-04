@@ -4,12 +4,14 @@ import com.atguigu.daijia.common.constant.SystemConstant;
 import com.atguigu.daijia.common.execption.GuiguException;
 import com.atguigu.daijia.common.result.Result;
 import com.atguigu.daijia.common.result.ResultCodeEnum;
+import com.atguigu.daijia.common.util.AuthContextHolder;
 import com.atguigu.daijia.common.util.LocationUtil;
 import com.atguigu.daijia.dispatch.client.NewOrderFeignClient;
 import com.atguigu.daijia.driver.service.OrderService;
 import com.atguigu.daijia.map.client.LocationFeignClient;
 import com.atguigu.daijia.map.client.MapFeignClient;
 import com.atguigu.daijia.model.entity.order.OrderInfo;
+import com.atguigu.daijia.model.enums.OrderStatus;
 import com.atguigu.daijia.model.form.map.CalculateDrivingLineForm;
 import com.atguigu.daijia.model.form.order.OrderFeeForm;
 import com.atguigu.daijia.model.form.order.StartDriveForm;
@@ -22,10 +24,7 @@ import com.atguigu.daijia.model.vo.base.PageVo;
 import com.atguigu.daijia.model.vo.map.DrivingLineVo;
 import com.atguigu.daijia.model.vo.map.OrderLocationVo;
 import com.atguigu.daijia.model.vo.map.OrderServiceLastLocationVo;
-import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
-import com.atguigu.daijia.model.vo.order.NewOrderDataVo;
-import com.atguigu.daijia.model.vo.order.OrderInfoVo;
-import com.atguigu.daijia.model.vo.order.OrderListVo;
+import com.atguigu.daijia.model.vo.order.*;
 import com.atguigu.daijia.model.vo.rules.FeeRuleResponseVo;
 import com.atguigu.daijia.model.vo.rules.ProfitsharingRuleResponseVo;
 import com.atguigu.daijia.model.vo.rules.RewardRuleResponseVo;
@@ -102,6 +101,13 @@ public class OrderServiceImpl implements OrderService {
         OrderInfoVo orderInfoVo = new OrderInfoVo();
         orderInfoVo.setOrderId(orderId);
         BeanUtils.copyProperties(orderInfo, orderInfoVo);
+
+        if (orderInfo.getStatus() >= OrderStatus.END_SERVICE.getStatus()) {
+            OrderBillVo orderBillVo = orderInfoFeignClient.getOrderBillInfo(orderId).getData();
+            OrderProfitsharingVo orderProfitsharingVo = orderInfoFeignClient.getOrderProfitsharing(orderId).getData();
+            orderInfoVo.setOrderBillVo(orderBillVo);
+            orderInfoVo.setOrderProfitsharingVo(orderProfitsharingVo);
+        }
         return orderInfoVo;
     }
 
@@ -169,8 +175,9 @@ public class OrderServiceImpl implements OrderService {
 
         //4.计算系统奖励
         String startTime = new DateTime(orderInfo.getStartServiceTime()).toString("yyyy-MM-dd") + " 00:00:00";
-        String endTime = new DateTime(orderInfo.getStartServiceTime()).toString("yyyy-MM-dd") + " 24:00:00";
-        Long orderNum = orderInfoFeignClient.getOrderNumByTime(startTime, endTime).getData();
+        String endTime = new DateTime(orderInfo.getStartServiceTime()).toString("yyyy-MM-dd") + " 23:59:59";
+        Long driverId = AuthContextHolder.getUserId();
+        Long orderNum = orderInfoFeignClient.getOrderNumByTime(driverId, startTime, endTime).getData();
         RewardRuleRequestForm rewardRuleRequestForm = new RewardRuleRequestForm();
         rewardRuleRequestForm.setStartTime(orderInfo.getStartServiceTime());
         rewardRuleRequestForm.setOrderNum(orderNum);
@@ -201,7 +208,7 @@ public class OrderServiceImpl implements OrderService {
         return true;
     }
 
-    @Override
+    //    @Override
     @SneakyThrows
     public Boolean endDriveThread(OrderFeeForm orderFeeForm) {
         //1.获取订单信息
@@ -253,7 +260,8 @@ public class OrderServiceImpl implements OrderService {
         CompletableFuture<Long> orderNumCompletableFuture = CompletableFuture.supplyAsync(() -> {
             String startTime = new DateTime(orderInfo.getStartServiceTime()).toString("yyyy-MM-dd") + " 00:00:00";
             String endTime = new DateTime(orderInfo.getStartServiceTime()).toString("yyyy-MM-dd") + " 24:00:00";
-            return orderInfoFeignClient.getOrderNumByTime(startTime, endTime).getData();
+            Long driverId = AuthContextHolder.getUserId();
+            return orderInfoFeignClient.getOrderNumByTime(driverId, startTime, endTime).getData();
         });
         CompletableFuture<RewardRuleResponseVo> rewardRuleResponseVoCompletableFuture = orderNumCompletableFuture.thenApplyAsync(orderNum -> {
             RewardRuleRequestForm rewardRuleRequestForm = new RewardRuleRequestForm();
@@ -307,4 +315,10 @@ public class OrderServiceImpl implements OrderService {
     public PageVo<OrderListVo> findDriverOrderPage(Long driverId, Long page, Long limit) {
         return orderInfoFeignClient.findDriverOrderPage(driverId, page, limit).getData();
     }
+
+    @Override
+    public Boolean sendOrderBillInfo(Long orderId, Long driverId) {
+        return orderInfoFeignClient.sendOrderBillInfo(orderId, driverId).getData();
+    }
+
 }

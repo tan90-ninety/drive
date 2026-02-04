@@ -11,7 +11,9 @@ import com.atguigu.daijia.model.form.order.UpdateOrderBillForm;
 import com.atguigu.daijia.model.form.order.UpdateOrderCartForm;
 import com.atguigu.daijia.model.vo.base.PageVo;
 import com.atguigu.daijia.model.vo.order.CurrentOrderInfoVo;
+import com.atguigu.daijia.model.vo.order.OrderBillVo;
 import com.atguigu.daijia.model.vo.order.OrderListVo;
+import com.atguigu.daijia.model.vo.order.OrderProfitsharingVo;
 import com.atguigu.daijia.order.mapper.OrderBillMapper;
 import com.atguigu.daijia.order.mapper.OrderInfoMapper;
 import com.atguigu.daijia.order.mapper.OrderProfitsharingMapper;
@@ -223,7 +225,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         wrapper.set(OrderInfo::getStatus, OrderStatus.START_SERVICE.getStatus());
         wrapper.set(OrderInfo::getStartServiceTime, new Date());
         boolean isUpdate = this.update(wrapper);
-        if(isUpdate) {
+        if (isUpdate) {
             this.log(startDriveForm.getOrderId(), OrderStatus.START_SERVICE.getStatus());
         } else {
             throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
@@ -236,8 +238,9 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     }
 
     @Override
-    public Long getOrderNumByTime(String startTime, String endTime) {
+    public Long getOrderNumByTime(Long driverId, String startTime, String endTime) {
         LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderInfo::getDriverId, driverId);
         queryWrapper.ge(OrderInfo::getStartServiceTime, startTime);
         queryWrapper.lt(OrderInfo::getStartServiceTime, endTime);
         return orderInfoMapper.selectCount(queryWrapper);
@@ -257,7 +260,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         wrapper.set(OrderInfo::getRealDistance, updateOrderBillForm.getRealDistance());
 
         boolean update = this.update(wrapper);
-        if(update) {
+        if (update) {
             OrderBill orderBill = new OrderBill();
             BeanUtils.copyProperties(updateOrderBillForm, orderBill);
             orderBill.setPayAmount(updateOrderBillForm.getTotalAmount());
@@ -268,11 +271,12 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             orderProfitsharing.setOrderId(updateOrderBillForm.getOrderId());
             orderProfitsharing.setRuleId(updateOrderBillForm.getProfitsharingRuleId());
             orderProfitsharing.setStatus(1);
+            orderProfitsharing.setDriverIncome(updateOrderBillForm.getDriverIncome());
             orderProfitsharingMapper.insert(orderProfitsharing);
         } else {
             throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
         }
-        return null;
+        return true;
     }
 
     @Override
@@ -287,12 +291,47 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         return new PageVo<>(pageInfo.getRecords(), pageInfo.getPages(), pageInfo.getTotal());
     }
 
+    @Override
+    public OrderBillVo getOrderBillInfo(Long orderId) {
+        OrderBill orderBill = orderBillMapper.selectOne(new LambdaQueryWrapper<OrderBill>().eq(OrderBill::getOrderId, orderId));
+        OrderBillVo orderBillVo = new OrderBillVo();
+        BeanUtils.copyProperties(orderBill, orderBillVo);
+        return orderBillVo;
+    }
+
+    @Override
+    public OrderProfitsharingVo getOrderProfitsharing(Long orderId) {
+        OrderProfitsharing orderProfitsharing = orderProfitsharingMapper.selectOne(new LambdaQueryWrapper<OrderProfitsharing>().eq(OrderProfitsharing::getOrderId, orderId));
+        OrderProfitsharingVo orderProfitsharingVo = new OrderProfitsharingVo();
+        BeanUtils.copyProperties(orderProfitsharing, orderProfitsharingVo);
+        return orderProfitsharingVo;
+    }
+
+    @Override
+    public Boolean sendOrderBillInfo(Long orderId, Long driverId) {
+        //更新订单信息
+        LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderInfo::getId, orderId);
+        queryWrapper.eq(OrderInfo::getDriverId, driverId);
+        //更新字段
+        OrderInfo updateOrderInfo = new OrderInfo();
+        updateOrderInfo.setStatus(OrderStatus.UNPAID.getStatus());
+        //只能更新自己的订单
+        int row = orderInfoMapper.update(updateOrderInfo, queryWrapper);
+        if (row == 1) {
+            //记录日志
+            this.log(orderId, OrderStatus.UNPAID.getStatus());
+        } else {
+            throw new GuiguException(ResultCodeEnum.UPDATE_ERROR);
+        }
+        return true;
+    }
+
     public void log(Long orderId, Integer status) {
         OrderStatusLog orderStatusLog = new OrderStatusLog();
         orderStatusLog.setOrderId(orderId);
         orderStatusLog.setOrderStatus(status);
         orderStatusLog.setOperateTime(new Date());
         orderStatusLogMapper.insert(orderStatusLog);
-
     }
 }
