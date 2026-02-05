@@ -13,11 +13,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface CustomerInfoFeignClient {
 
     @GetMapping("/customer/info/login/{code}")
-    public Result<Long> login(@PathVariable String code);
+    Result<Long> login(@PathVariable String code);
 
     @GetMapping("/customer/info/getCustomerLoginInfo/{customerId}")
-    public Result<CustomerLoginVo> getCustomerLoginInfo(@PathVariable("customerId") Long customerId);
+    Result<CustomerLoginVo> getCustomerLoginInfo(@PathVariable("customerId") Long customerId);
 
     @PostMapping("/customer/info/updateWxPhoneNumber")
-    public Result<Boolean> updateWxPhoneNumber(@RequestBody UpdateWxPhoneForm updateWxPhoneForm);
+    Result<Boolean> updateWxPhoneNumber(@RequestBody UpdateWxPhoneForm updateWxPhoneForm);
+
+    @GetMapping("/customer/info/getCustomerOpenId/{customerId}")
+    Result<String> getCustomerOpenId(@PathVariable("customerId") Long customerId);
 }
