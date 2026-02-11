@@ -212,4 +212,9 @@ public class OrderServiceImpl implements OrderService {
         paymentInfoForm.setPayWay(1);
         return wxPayFeignClient.createWxPayment(paymentInfoForm).getData();
     }
+
+    @Override
+    public Boolean queryPayStatus(String orderNo) {
+        return wxPayFeignClient.queryPayStatus(orderNo).getData();
+    }
 }

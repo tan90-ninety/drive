@@ -124,4 +124,11 @@ public class OrderController {
         createWxPaymentForm.setCustomerId(customerId);
         return Result.ok(orderService.createWxPayment(createWxPaymentForm));
     }
+
+    @Operation(summary = "支付状态查询")
+    @GuiguLogin
+    @GetMapping("/queryPayStatus/{orderNo}")
+    public Result<Boolean> queryPayStatus(@PathVariable String orderNo) {
+        return Result.ok(orderService.queryPayStatus(orderNo));
+    }
 }

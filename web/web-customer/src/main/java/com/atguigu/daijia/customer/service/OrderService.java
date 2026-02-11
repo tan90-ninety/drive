@@ -38,4 +38,6 @@ public interface OrderService {
     PageVo<OrderListVo> findCustomerOrderPage(Long customerId, Long page, Long limit);
 
     WxPrepayVo createWxPayment(CreateWxPaymentForm createWxPaymentForm);
+
+    Boolean queryPayStatus(String orderNo);
 }
