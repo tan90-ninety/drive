@@ -72,4 +72,10 @@ public interface OrderInfoFeignClient {
 
     @GetMapping("/order/info/getOrderPayVo/{orderNo}/{customerId}")
     Result<OrderPayVo> getOrderPayVo(@PathVariable("orderNo") String orderNo, @PathVariable("customerId") Long customerId);
+
+    @GetMapping("/order/info//updateOrderPayStatus/{orderNo}")
+    Result<Boolean> updateOrderPayStatus(@PathVariable("orderNo") String orderNo);
+
+    @GetMapping("/order/info//getOrderRewardFee/{orderNo}")
+    Result<OrderRewardVo> getOrderRewardFee(@PathVariable("orderNo") String orderNo);
 }

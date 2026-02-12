@@ -40,7 +40,7 @@ public class WxPayController {
     @PostMapping("/notify")
     public Map<String,Object> notify(HttpServletRequest request) {
         try {
-            wxPayService.wxnotify(request);
+            wxPayService.wxNotify(request);
 
             //返回成功
             Map<String,Object> result = new HashMap<>();

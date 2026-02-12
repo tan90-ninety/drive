@@ -45,4 +45,8 @@ public interface OrderInfoService extends IService<OrderInfo> {
     Boolean sendOrderBillInfo(Long orderId, Long driverId);
 
     OrderPayVo getOrderPayVo(String orderNo, Long customerId);
+
+    Boolean updateOrderPayStatus(String orderNo);
+
+    OrderRewardVo getOrderRewardFee(String orderNo);
 }
