@@ -24,6 +24,7 @@ import com.wechat.pay.java.core.notification.RequestParam;
 import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
 import com.wechat.pay.java.service.payments.jsapi.model.*;
 import com.wechat.pay.java.service.payments.model.Transaction;
+import io.seata.spring.annotation.GlobalTransactional;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -161,6 +162,7 @@ public class WxPayServiceImpl implements WxPayService {
         }
     }
 
+    @GlobalTransactional
     @Override
     public void handleOrder(String orderNo) {
         //1.更改订单支付状态
