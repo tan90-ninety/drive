@@ -68,3 +68,11 @@ cstr.customer_id = #{customerId}
 and cstr.status = 2
 order by cstr.id desc
 </select>
+
+<update id="updateReceiveCount">
+update coupon_info set receive_count = receive_count + 1 where id = #{id}
+</update>
+
+<update id="updateReceiveCountByLimit">
+update coupon_info set receive_count = receive_count + 1 where id = #{id} and receive_count &lt; publish_count
+</update>
