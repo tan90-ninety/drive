@@ -22,6 +22,8 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
@@ -67,12 +69,25 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         orderInfo.setStatus(OrderStatus.WAITING_ACCEPT.getStatus());
         orderInfoMapper.insert(orderInfo);
 
+        this.sendDelayMessage(orderInfo.getId());
+
         log(orderInfo.getId(), orderInfo.getStatus());
 
         // 接单标识
         redisTemplate.opsForValue().set(RedisConstant.ORDER_ACCEPT_MARK + orderInfo.getId(), "0", RedisConstant.ORDER_ACCEPT_MARK_EXPIRES_TIME, TimeUnit.MINUTES);
 
         return orderInfo.getId();
+    }
+
+    private void sendDelayMessage(Long id) {
+        try {
+            RBlockingQueue<Object> blockingQueue = redissonClient.getBlockingQueue("queue_cancel");
+            RDelayedQueue<Object> delayedQueue = redissonClient.getDelayedQueue(blockingQueue);
+            delayedQueue.offer(id, 15, TimeUnit.MINUTES);
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+        }
     }
 
     @Override
@@ -371,6 +386,24 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         orderRewardVo.setDriverId(orderInfo.getDriverId());
         orderRewardVo.setRewardFee(orderBill.getRewardFee());
         return orderRewardVo;
+    }
+
+    @Override
+    public void orderCancel(long orderId) {
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+        if(orderInfo.getStatus() == OrderStatus.WAITING_ACCEPT.getStatus()) {
+            // 设置更新数据
+            OrderInfo orderInfoUpt = new OrderInfo();
+            orderInfoUpt.setId(orderId);
+            orderInfoUpt.setStatus(OrderStatus.CANCEL_ORDER.getStatus());
+            // 执行更新方法
+            int rows = orderInfoMapper.updateById(orderInfoUpt);
+
+            if(rows == 1) {
+                //删除redis订单标识
+                redisTemplate.delete(RedisConstant.ORDER_ACCEPT_MARK);
+            }
+        }
     }
 
     public void log(Long orderId, Integer status) {
